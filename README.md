@@ -31,5 +31,5 @@ The detector uses the public `tommy33355/damagelens-onnx` ONNX export, which doc
 ## Privacy
 The uploaded image is processed in the browser and is not sent by this page to a project-owned analysis backend. The model file is downloaded from Hugging Face. Browser extensions or network infrastructure may have their own behavior; do not upload sensitive documents or personally identifiable information unnecessarily.
 
-## Fictional insurance example
-The generated report includes clearly labelled sample policy details (SampleShield Motor Cover, policy SAMPLE-MOTOR-2026-001), a sample ₹5,00,000 sum insured, ₹2,000 deductible, and an assumed 80% eligible share after deductible. It calculates an illustrative insurer share and customer-paid repair balance from detected repair-cost ranges. These details are invented for demonstration and must not be presented as a real policy or claim approval.
+## Sample insurance details
+The generated report includes clearly labelled sample policy details (SampleShield Motor Cover, policy SAMPLE-MOTOR-2026-001), a sample ₹5,00,000 sum insured, ₹2,000 deductible, and an assumed 80% eligible share after deductible. It calculates an illustrative insurer share and customer-paid repair balance from detected repair-cost ranges. These details are fictional and must not be presented as a real policy or claim approval.
