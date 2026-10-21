@@ -1,15 +1,14 @@
 {
   "name": "vehicle-damage-and-insurance-analyzer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "AI-assisted vehicle damage assessment using a local Node.js backend and OpenAI vision",
+  "description": "Vehicle damage assessment using a secure Node.js backend and OpenAI vision",
   "scripts": {
     "start": "node server.js",
     "dev": "node server.js",
-    "check": "node --check server.js && node --check app.js"
+    "check": "node --check server.js && node --check app.js && node --check tests/server-smoke.test.js",
+    "test": "node --test"
   },
-  "engines": {
-    "node": ">=18"
-  },
+  "engines": { "node": ">=18.18" },
   "type": "module"
 }
