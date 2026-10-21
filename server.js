@@ -6,7 +6,6 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
 const MAX_IMAGE_CHARS = 4_300_000;
-const allowedOrigins = new Set((process.env.FRONTEND_ORIGIN || "").split(",").map(v => v.trim()).filter(Boolean));
 
 function loadLocalEnv() {
   const envPath = path.join(ROOT, ".env");
@@ -19,6 +18,8 @@ function loadLocalEnv() {
   }
 }
 loadLocalEnv();
+
+const allowedOrigins = new Set((process.env.FRONTEND_ORIGIN || "").split(",").map(v => v.trim()).filter(Boolean));
 
 function sendJson(res, status, data) {
   res.writeHead(status, { "Content-Type": "application/json; charset=utf-8", "Cache-Control": "no-store" });
@@ -44,10 +45,6 @@ async function analyze(req, res) {
     res.setHeader("Allow", "POST");
     return sendJson(res, 405, { error: "Use POST to analyze an image." });
   }
-  if (!process.env.OPENAI_API_KEY) {
-    return sendJson(res, 500, { error: "OPENAI_API_KEY is missing. Add it to a local .env file; never put it in frontend JavaScript." });
-  }
-
   try {
     const body = await readJson(req);
     const image = body.image;
@@ -56,6 +53,10 @@ async function analyze(req, res) {
     }
     if (image.length > MAX_IMAGE_CHARS) {
       return sendJson(res, 413, { error: "Image is too large. Please upload an image under 3 MB." });
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      return sendJson(res, 503, { error: "The AI backend is not configured. Set OPENAI_API_KEY as a private backend environment variable, then restart it." });
     }
 
     const prompt = `You are assessing a vehicle using only the uploaded photo. Do not ask for or rely on an accident description. Analyze only visible evidence. Clearly separate visible facts from uncertain inferences. Never claim the photo proves the actual accident history, hidden structural damage, liability, or insurance coverage. If damage is not visible or the image is unclear, say so. Estimate a broad illustrative repair range in Indian rupees only when reasonable; state that an in-person inspection is needed. Return ONLY valid JSON with these keys: severity (low, moderate, high, uncertain), confidence (number 0 to 1), impactArea (string), damageTypes (array of strings), damageSummary (string), repairRange (string), incident {accidentType (likely visual pattern or "Cannot determine from image"), impactDirection (string or uncertain), components (array), severity (string)}, consistency {level (string such as "Image-based assessment"), explanation (string explaining evidence and limitations)}, and nextStep (string). Be conservative, do not invent details, and use INR estimates as illustrative only.`;
