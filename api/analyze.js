@@ -1,5 +1,5 @@
 const MODEL = process.env.OPENAI_MODEL || "gpt-4.1-mini";
-const MAX_IMAGE_CHARS = 11_200_000;
+const MAX_IMAGE_CHARS = 4_300_000;
 
 function send(res, status, body) {
   return res.status(status).json(body);
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     const image = body.image;
     const description = typeof body.description === "string" ? body.description.trim() : "";
     if (typeof image !== "string" || !/^data:image\/(jpeg|png|webp);base64,/i.test(image)) return send(res, 400, { error: "Please upload a JPG, PNG, or WEBP image." });
-    if (image.length > MAX_IMAGE_CHARS) return send(res, 413, { error: "Image is too large. Please upload an image under 8 MB." });
+    if (image.length > MAX_IMAGE_CHARS) return send(res, 413, { error: "Image is too large. Please upload an image under 3 MB." });
     if (description.length > 3000) return send(res, 400, { error: "Description must be 3,000 characters or fewer." });
     const prompt = "Analyze this vehicle photo for visible damage. Optional accident description: " + (description || "Not provided") + "\n\nReturn ONLY valid JSON with keys severity (low, moderate, high, uncertain), confidence (0 to 1), impactArea, damageTypes (array), damageSummary, repairRange (approximate INR), incident {accidentType, impactDirection, components, severity}, consistency {level, explanation}, and nextStep. Base findings on the image. Do not invent damage. If unclear, say so. Estimates are illustrative, not quotations or official insurance decisions."; 
     const upstream = await fetch("https://api.openai.com/v1/chat/completions", {
