@@ -35,6 +35,10 @@ analyzeBtn.addEventListener("click",async()=>{
   if(!validate())return;
   analyzeBtn.disabled=true;loading.classList.remove("hidden");results.classList.add("hidden");
   try{
+    // GitHub Pages is static hosting and cannot execute the private /api/analyze function.
+    if (location.hostname.endsWith("github.io")) {
+      throw new Error("You are viewing the GitHub Pages copy, which cannot run the AI backend. Open your project's live Vercel deployment URL and upload the image there. If no Vercel deployment URL exists yet, deploy this repository in Vercel and add OPENAI_API_KEY under Project Settings → Environment Variables.");
+    }
     const image=await dataUrl(selectedFile);
     const response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,fileName:selectedFile.name})});
     const contentType=response.headers.get("content-type")||"";
