@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Vehicle Damage & Insurance Analyzer — AI-assisted preliminary vehicle damage assessment.">
-  <!-- Set to the backend HTTPS base URL after deployment; never place an API key here. -->
-  <meta name="backend-api-url" content="">
-  <title>Vehicle Damage & Insurance Analyzer</title>
+  <meta name="description" content="Browser-based vehicle image diagnostics and educational repair cost guide. No API or backend required.">
+<title>Vehicle Damage & Insurance Analyzer</title>
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
@@ -28,9 +26,9 @@
     <section class="hero" id="home">
       <div class="hero-overlay"></div>
       <div class="hero-content">
-        <p class="eyebrow">AI-ASSISTED VEHICLE ASSESSMENT</p>
+        <p class="eyebrow">BROWSER-BASED IMAGE SCREENING</p>
         <h1>A clearer first look<br>after an accident.</h1>
-        <p>Upload a vehicle image. AI will inspect visible damage and prepare a preliminary assessment automatically.</p>
+        <p>Upload a vehicle image for local image-quality diagnostics and a separate repair-cost guide. No API or server is used.</p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="#assessment">Start Assessment <span>→</span></a>
           <a class="btn btn-ghost" href="#how-it-works">How It Works</a>
@@ -47,16 +45,16 @@
       </div>
       <div class="steps">
         <article class="step-card"><span>01</span><h3>Image Review</h3><p>Upload a vehicle image. The system prepares the image and identifies visible damage.</p></article>
-        <article class="step-card"><span>02</span><h3>AI Vision Analysis</h3><p>The vision model examines visible damage, likely impact area and affected components from the image.</p></article>
-        <article class="step-card"><span>03</span><h3>Assessment Report</h3><p>Review severity, confidence, likely damage, approximate repair costs and recommended next steps.</p></article>
+        <article class="step-card"><span>02</span><h3>Image Diagnostics</h3><p>Browser pixel analysis records brightness, contrast and edge density; it does not diagnose damage.</p></article>
+        <article class="step-card"><span>03</span><h3>Assessment Report</h3><p>Review image diagnostics, a manually selected cost range and recommended next steps.</p></article>
       </div>
     </section>
 
     <section class="section assessment-section" id="assessment">
       <div class="section-heading">
-        <p class="eyebrow">ASSESSMENT</p>
+        <p class="eyebrow">LOCAL IMAGE SCREENING</p>
         <h2>Vehicle Damage Assessment</h2>
-        <p>Upload one clear vehicle image. The AI handles the assessment automatically.</p>
+        <p>Upload one clear vehicle image. Processing runs locally; no trained damage-detection model is currently integrated.</p>
       </div>
 
       <div class="assessment-grid">
@@ -90,6 +88,7 @@
 
       <div id="analysisError" class="analysis-error hidden" role="alert" aria-live="assertive"></div>
 
+      <div class="panel" style="max-width:820px;margin:20px auto"><h3>Optional repair-cost guide inputs</h3><p>These choices are not inferred from the photo.</p><label for="costCategory">Component / damage type</label><select id="costCategory" style="display:block;width:100%;padding:12px;margin:8px 0 16px;border:1px solid #e5e7eb;border-radius:10px"><option value="scratch">Scratch / paint damage</option><option value="dent">Dent / panel deformation</option><option value="bumper">Bumper damage</option><option value="glass">Glass damage</option><option value="lamp">Headlight / lamp damage</option><option value="other">Other / uncertain component</option></select><label for="costSeverity">Assumed severity (select manually)</label><select id="costSeverity" style="display:block;width:100%;padding:12px;margin:8px 0 0;border:1px solid #e5e7eb;border-radius:10px"><option value="minor">Minor</option><option value="moderate">Moderate</option><option value="severe">Severe</option></select></div>
       <div class="assessment-actions">
         <button class="btn btn-primary btn-large" id="analyzeBtn">Analyze Vehicle <span>→</span></button>
         <button class="btn btn-secondary btn-large hidden" id="resetBtn">New Assessment</button>
@@ -116,7 +115,7 @@
     </section>
   </main>
 
-  <footer><div><strong>Vehicle Damage & Insurance Analyzer</strong><span>AI-assisted vehicle assessment for academic and demonstration use.</span></div><span>© 2026 · Academic Project</span></footer>
-  <script src="./app.js?v=20261022-backend-config"></script>
+  <footer><div><strong>Vehicle Damage & Insurance Analyzer</strong><span>Browser-only image diagnostics and educational repair-cost guidance.</span></div><span>© 2026 · Academic Project</span></footer>
+  <script src="./app.js?v=api-free-screening-1"></script>
 </body>
 </html>
