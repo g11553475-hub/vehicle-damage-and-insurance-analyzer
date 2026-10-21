@@ -1,81 +1,19 @@
 const $=s=>document.querySelector(s);
 const imageInput=$("#imageInput"),dropzone=$("#dropzone"),preview=$("#previewImage"),empty=$("#uploadEmpty"),previewWrap=$("#uploadPreview"),fileName=$("#fileName"),fileSize=$("#fileSize"),analyzeBtn=$("#analyzeBtn"),resetBtn=$("#resetBtn"),loading=$("#loadingState"),results=$("#results"),reportContent=$("#reportContent"),imageError=$("#imageError"),analysisError=$("#analysisError");
-
-let selectedFile=null;
-const API_BASE_URL=(document.querySelector('meta[name="backend-api-url"]')?.content||"").trim();
-$("#menuToggle").addEventListener("click",()=>{const nav=$("#navLinks");const open=nav.classList.toggle("open");$("#menuToggle").setAttribute("aria-expanded",open)});
+let selectedFile=null,previewUrl=null;
+$("#menuToggle").addEventListener("click",()=>{const n=$("#navLinks"),o=n.classList.toggle("open");$("#menuToggle").setAttribute("aria-expanded",o)});
 $("#navLinks").addEventListener("click",e=>{if(e.target.matches("a"))$("#navLinks").classList.remove("open")});
-
-function setFile(file){
-  imageError.textContent="";
-  if(!file)return;
-  const valid=["image/jpeg","image/png","image/webp"].includes(file.type);
-  if(!valid){imageError.textContent="Please upload a JPG, PNG or WEBP image.";return}
-  if(file.size>3*1024*1024){imageError.textContent="The image must be 3 MB or smaller for reliable upload.";return}
-  selectedFile=file;
-  const url=URL.createObjectURL(file);preview.src=url;preview.alt=`Uploaded vehicle image: ${file.name}`;
-  fileName.textContent=file.name;fileSize.textContent=`${(file.size/1024/1024).toFixed(2)} MB`;
-  empty.classList.add("hidden");previewWrap.classList.remove("hidden");
-}
+function setFile(f){imageError.textContent="";if(!f)return;if(!["image/jpeg","image/png","image/webp"].includes(f.type)){imageError.textContent="Please upload a JPG, PNG or WEBP image.";return}if(f.size>3*1024*1024){imageError.textContent="The image must be 3 MB or smaller.";return}if(previewUrl)URL.revokeObjectURL(previewUrl);selectedFile=f;previewUrl=URL.createObjectURL(f);preview.src=previewUrl;fileName.textContent=f.name;fileSize.textContent=(f.size/1048576).toFixed(2)+" MB";empty.classList.add("hidden");previewWrap.classList.remove("hidden")}
 imageInput.addEventListener("change",e=>setFile(e.target.files[0]));
-["dragenter","dragover"].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.style.borderColor="#b91c1c"}));
-["dragleave","drop"].forEach(ev=>dropzone.addEventListener(ev,e=>{e.preventDefault();dropzone.style.borderColor=""}));
+["dragenter","dragover"].forEach(v=>dropzone.addEventListener(v,e=>{e.preventDefault();dropzone.style.borderColor="#b91c1c"}));
+["dragleave","drop"].forEach(v=>dropzone.addEventListener(v,e=>{e.preventDefault();dropzone.style.borderColor=""}));
 dropzone.addEventListener("drop",e=>setFile(e.dataTransfer.files[0]));
-$("#replaceBtn").addEventListener("click",e=>{e.preventDefault();imageInput.click()});
-$("#removeBtn").addEventListener("click",e=>{e.preventDefault();clearFile()});
-function clearFile(){selectedFile=null;imageInput.value="";preview.src="";empty.classList.remove("hidden");previewWrap.classList.add("hidden");if(analysisError){analysisError.textContent="";analysisError.classList.add("hidden")}}
-
-function validate(){
-  let ok=true;imageError.textContent="";
-  if(!selectedFile){imageError.textContent="Please upload a vehicle image before starting the assessment.";ok=false}
-  return ok
-}
-function dataUrl(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}
-
-analyzeBtn.addEventListener("click",async()=>{
-  if(!validate())return;
-  if(analysisError){analysisError.textContent="";analysisError.classList.add("hidden");}
-  analyzeBtn.disabled=true;loading.classList.remove("hidden");results.classList.add("hidden");
-  try{
-    // The backend URL is public configuration. The private API key remains on the server.
-    if(location.hostname.endsWith("github.io")&&!API_BASE_URL){throw new Error("The secure AI backend URL has not been configured. Deploy server.js to a Node.js backend, then set the backend-api-url meta tag in index.html. Never put the API key in this website.");}
-    const image=await dataUrl(selectedFile);
-    const response=await fetch(`${API_BASE_URL}/api/analyze`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,fileName:selectedFile.name})});
-    const contentType=response.headers.get("content-type")||"";
-    const data=contentType.includes("application/json")?await response.json():null;
-    if(!response.ok){throw new Error(data?.error||`The analysis server returned HTTP ${response.status}. The server must be running and connected to this website before AI analysis can work.`);}
-    if(!data||!data.analysisMode)throw new Error("Unexpected backend response. Check that the Node.js analysis server is running.");
-    renderResults(data);
-  }catch(err){
-    if(analysisError){analysisError.textContent=err.message||"The analysis could not be completed. Please try again.";analysisError.classList.remove("hidden");analysisError.scrollIntoView({behavior:"smooth",block:"center"});}
-    else alert(err.message||"The analysis could not be completed. Please try again.");
-  }finally{
-    loading.classList.add("hidden");analyzeBtn.disabled=false;
-  }
-});
-
+$("#replaceBtn").addEventListener("click",e=>{e.preventDefault();imageInput.click()});$("#removeBtn").addEventListener("click",e=>{e.preventDefault();clearFile()});
+function clearFile(){selectedFile=null;imageInput.value="";preview.src="";if(previewUrl)URL.revokeObjectURL(previewUrl);previewUrl=null;empty.classList.remove("hidden");previewWrap.classList.add("hidden");analysisError.textContent="";analysisError.classList.add("hidden")}
 function esc(v){return String(v??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function tags(arr){return (arr||[]).map(x=>`<span class="tag">${esc(x.replaceAll("_"," "))}</span>`).join("")||'<span class="tag">None identified</span>'}
-function renderResults(d){
-  const confidence=Math.round((Number(d.confidence)||0)*100);
-  reportContent.innerHTML=`
-    <div class="report-meta">Analysis mode: <strong>${esc(d.analysisMode||"AI-assisted")}</strong> · Assessment date: ${new Date().toLocaleString()}</div>
-    <div class="result-grid">
-      <div class="result-card severity"><small>Overall Severity</small><strong>${esc(String(d.severity||"Unknown").toUpperCase())}</strong></div>
-      <div class="result-card"><small>Confidence</small><strong>${confidence}%</strong></div>
-      <div class="result-card"><small>Impact Area</small><strong>${esc(d.impactArea||"Not clear")}</strong></div>
-      <div class="result-card"><small>Consistency</small><strong>${esc(d.consistency?.level||"Unknown")}</strong></div>
-    </div>
-    <div class="detail-grid">
-      <div class="detail-card"><h3>Observed Damage</h3><p>${esc(d.damageSummary||"No clear visible damage could be established from the available evidence.")}</p><h3>Damage Types</h3><div class="tag-list">${tags(d.damageTypes)}</div></div>
-      <div class="detail-card"><h3>AI-Inferred Incident</h3><p><strong>Likely event:</strong> ${esc(d.incident?.accidentType||"Cannot be determined from image alone")}</p><p><strong>Likely impact direction:</strong> ${esc(d.incident?.impactDirection||"Uncertain")}</p><p><strong>Visual severity:</strong> ${esc(d.incident?.severity||d.severity||"Uncertain")}</p><p><strong>Potentially affected components:</strong></p><div class="tag-list">${tags(d.incident?.components)}</div><p>These are visual inferences only; a single image cannot establish the actual accident history.</p></div>
-      <div class="detail-card"><h3>Estimated Repair Range</h3><p style="font-size:26px;font-weight:800;color:#171717">${esc(d.repairRange||"Professional inspection required")}</p><p>This is an approximate educational estimate, not a final quotation.</p></div>
-      <div class="detail-card"><h3>Visual Evidence & Limitations</h3><p><strong>${esc(d.consistency?.level||"Image-based assessment")}</strong></p><p>${esc(d.consistency?.explanation||"Assessment is based only on visible details in the uploaded photo.")}</p></div>
-    </div>
-    <div class="detail-card" style="margin-top:14px"><h3>Recommended Next Step</h3><p>${esc(d.nextStep||"Document the damage from multiple angles and contact an authorized repair center or insurer for formal inspection.")}</p></div>
-    <div class="report-disclaimer"><strong>Disclaimer:</strong> This is an AI-assisted preliminary assessment for academic/demonstration use. It is not a legally binding insurance decision, professional inspection, or exact repair quotation.</div>`;
-  results.classList.remove("hidden");resetBtn.classList.remove("hidden");results.scrollIntoView({behavior:"smooth",block:"start"});
-}
-$("#printBtn").addEventListener("click",()=>window.print());
-$("#generateBtn").addEventListener("click",()=>window.print());
-resetBtn.addEventListener("click",()=>{clearFile();results.classList.add("hidden");resetBtn.classList.add("hidden");window.scrollTo({top:document.querySelector("#assessment").offsetTop-80,behavior:"smooth"})});
+function inspectImage(file){return new Promise((resolve,reject)=>{const img=new Image(),url=URL.createObjectURL(file);img.onload=()=>{try{const scale=Math.min(1,320/Math.max(img.naturalWidth,img.naturalHeight)),w=Math.max(1,Math.round(img.naturalWidth*scale)),h=Math.max(1,Math.round(img.naturalHeight*scale)),c=document.createElement("canvas");c.width=w;c.height=h;const ctx=c.getContext("2d",{willReadFrequently:true});if(!ctx)throw Error("This browser cannot process the image.");ctx.drawImage(img,0,0,w,h);const p=ctx.getImageData(0,0,w,h).data,g=new Float32Array(w*h);let s=0,s2=0;for(let i=0,j=0;i<p.length;i+=4,j++){g[j]=.299*p[i]+.587*p[i+1]+.114*p[i+2];s+=g[j];s2+=g[j]*g[j]}let edge=0,count=0;for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++){const i=y*w+x,mag=Math.hypot(g[i+1]-g[i-1],g[i+w]-g[i-w]);if(mag>60)edge++;count++}const n=w*h,mean=s/n;resolve({width:img.naturalWidth,height:img.naturalHeight,brightness:Math.round(mean),contrast:Math.round(Math.sqrt(Math.max(0,s2/n-mean*mean))),edgeDensity:count?edge/count:0})}catch(e){reject(e)}finally{URL.revokeObjectURL(url)}};img.onerror=()=>{URL.revokeObjectURL(url);reject(Error("Image decoding failed. Please try another JPG, PNG or WEBP file."))};img.src=url})}
+const priceTable={scratch:{minor:[2000,6000],moderate:[6000,18000],severe:[18000,40000]},dent:{minor:[3000,8000],moderate:[8000,22000],severe:[22000,50000]},bumper:{minor:[2500,7000],moderate:[7000,20000],severe:[20000,45000]},glass:{minor:[3000,10000],moderate:[8000,18000],severe:[15000,40000]},lamp:{minor:[1500,5000],moderate:[5000,12000],severe:[10000,30000]},other:{minor:[2000,8000],moderate:[8000,25000],severe:[20000,60000]}};
+function rupees(n){return "₹"+n.toLocaleString("en-IN")}
+function showResults(d){const k=$("#costCategory").value,l=$("#costSeverity").value,r=priceTable[k][l],labels={scratch:"Scratch / paint",dent:"Dent / panel",bumper:"Bumper",glass:"Glass",lamp:"Headlight / lamp",other:"Other / uncertain"};reportContent.innerHTML='<div class="report-meta">Local browser image diagnostics · '+new Date().toLocaleString()+'</div><div class="report-disclaimer"><strong>No trained damage-detection model is installed.</strong> These are pixel measurements, not a damage diagnosis. The page cannot identify damage categories, provide a damage confidence score, or draw valid damage boxes.</div><div class="result-grid"><div class="result-card"><small>Image dimensions</small><strong>'+d.width+' × '+d.height+'</strong></div><div class="result-card"><small>Brightness (0–255)</small><strong>'+d.brightness+'</strong></div><div class="result-card"><small>Image contrast</small><strong>'+d.contrast+'</strong></div><div class="result-card"><small>Edge density</small><strong>'+(d.edgeDensity*100).toFixed(1)+'%</strong></div></div><div class="detail-grid"><div class="detail-card"><h3>Image quality notes</h3><p>'+(d.brightness<45?"The image is very dark; retake it with better lighting.":d.brightness>220?"The image is very bright; reduce glare if possible.":"Brightness is within a broad usable range.")+'</p><p>'+(d.contrast<25?"Low contrast may make small details hard to inspect.":"Contrast is measured for reference only.")+'</p><p>Edges can come from reflections, grille patterns and background details. These metrics do not establish damage.</p></div><div class="detail-card"><h3>Approximate repair-cost guide</h3><p>This range uses your manual selections, not an image prediction.</p><p><strong>'+esc(labels[k])+' · '+esc(l)+'</strong></p><p style="font-size:26px;font-weight:800;color:#171717">'+rupees(r[0])+' – '+rupees(r[1])+'</p><p>Illustrative INR only. Actual cost depends on vehicle, part, labour, paint and hidden damage.</p></div></div><div class="detail-card" style="margin-top:14px"><h3>Recommended next step</h3><p>Take clear photos from multiple angles and ask a qualified repair professional or insurer for an inspection. This is not an insurance decision.</p></div>';results.classList.remove("hidden");resetBtn.classList.remove("hidden");results.scrollIntoView({behavior:"smooth",block:"start"})}
+analyzeBtn.addEventListener("click",async()=>{if(!selectedFile){imageError.textContent="Please upload a vehicle image before starting.";return}analysisError.textContent="";analysisError.classList.add("hidden");analyzeBtn.disabled=true;loading.classList.remove("hidden");results.classList.add("hidden");try{showResults(await inspectImage(selectedFile))}catch(e){analysisError.textContent=e.message||"The image could not be processed.";analysisError.classList.remove("hidden")}finally{loading.classList.add("hidden");analyzeBtn.disabled=false}});
+$("#printBtn").addEventListener("click",()=>window.print());$("#generateBtn").addEventListener("click",()=>window.print());resetBtn.addEventListener("click",()=>{clearFile();results.classList.add("hidden");resetBtn.classList.add("hidden");window.scrollTo({top:$("#assessment").offsetTop-80,behavior:"smooth"})});
