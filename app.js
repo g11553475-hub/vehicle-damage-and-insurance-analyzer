@@ -1,10 +1,9 @@
 const $=s=>document.querySelector(s);
-const imageInput=$("#imageInput"),dropzone=$("#dropzone"),preview=$("#previewImage"),empty=$("#uploadEmpty"),previewWrap=$("#uploadPreview"),fileName=$("#fileName"),fileSize=$("#fileSize"),description=$("#description"),analyzeBtn=$("#analyzeBtn"),resetBtn=$("#resetBtn"),loading=$("#loadingState"),results=$("#results"),reportContent=$("#reportContent"),imageError=$("#imageError"),descriptionError=$("#descriptionError");
+const imageInput=$("#imageInput"),dropzone=$("#dropzone"),preview=$("#previewImage"),empty=$("#uploadEmpty"),previewWrap=$("#uploadPreview"),fileName=$("#fileName"),fileSize=$("#fileSize"),analyzeBtn=$("#analyzeBtn"),resetBtn=$("#resetBtn"),loading=$("#loadingState"),results=$("#results"),reportContent=$("#reportContent"),imageError=$("#imageError");
 
 let selectedFile=null;
 $("#menuToggle").addEventListener("click",()=>{const nav=$("#navLinks");const open=nav.classList.toggle("open");$("#menuToggle").setAttribute("aria-expanded",open)});
 $("#navLinks").addEventListener("click",e=>{if(e.target.matches("a"))$("#navLinks").classList.remove("open")});
-description.addEventListener("input",()=>$("#charCount").textContent=`${description.value.length} / 3000`);
 
 function setFile(file){
   imageError.textContent="";
@@ -26,7 +25,7 @@ $("#removeBtn").addEventListener("click",e=>{e.preventDefault();clearFile()});
 function clearFile(){selectedFile=null;imageInput.value="";preview.src="";empty.classList.remove("hidden");previewWrap.classList.add("hidden")}
 
 function validate(){
-  let ok=true;imageError.textContent="";descriptionError.textContent="";
+  let ok=true;imageError.textContent="";
   if(!selectedFile){imageError.textContent="Please upload a vehicle image before starting the assessment.";ok=false}
   return ok
 }
@@ -37,11 +36,11 @@ analyzeBtn.addEventListener("click",async()=>{
   analyzeBtn.disabled=true;loading.classList.remove("hidden");results.classList.add("hidden");
   try{
     const image=await dataUrl(selectedFile);
-    const response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,description:description.value.trim(),fileName:selectedFile.name})});
+    const response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,fileName:selectedFile.name})});
     const contentType=response.headers.get("content-type")||"";
     const data=contentType.includes("application/json")?await response.json():null;
-    if(!response.ok)throw new Error(data?.error||`Backend request failed (HTTP ${response.status}). Open the Vercel deployment, not GitHub Pages.`);
-    if(!data||!data.analysisMode)throw new Error("Unexpected backend response. Check the Vercel deployment.");
+    if(!response.ok)throw new Error(data?.error||`AI analysis service failed (HTTP ${response.status}). GitHub Pages cannot run the private AI backend; start the included Node.js server to analyze images.`);
+    if(!data||!data.analysisMode)throw new Error("Unexpected backend response. Check that the Node.js analysis server is running.");
     renderResults(data);
   }catch(err){
     alert(err.message||"The analysis could not be completed. Please try again.");
@@ -64,9 +63,9 @@ function renderResults(d){
     </div>
     <div class="detail-grid">
       <div class="detail-card"><h3>Observed Damage</h3><p>${esc(d.damageSummary||"No clear visible damage could be established from the available evidence.")}</p><h3>Damage Types</h3><div class="tag-list">${tags(d.damageTypes)}</div></div>
-      <div class="detail-card"><h3>Accident Description Analysis</h3><p><strong>Type:</strong> ${esc(d.incident?.accidentType||"Not clear")}</p><p><strong>Direction:</strong> ${esc(d.incident?.impactDirection||"Not clear")}</p><p><strong>Severity:</strong> ${esc(d.incident?.severity||"Not clear")}</p><p><strong>Components:</strong></p><div class="tag-list">${tags(d.incident?.components)}</div></div>
+      <div class="detail-card"><h3>AI-Inferred Incident</h3><p><strong>Likely event:</strong> ${esc(d.incident?.accidentType||"Cannot be determined from image alone")}</p><p><strong>Likely impact direction:</strong> ${esc(d.incident?.impactDirection||"Uncertain")}</p><p><strong>Visual severity:</strong> ${esc(d.incident?.severity||d.severity||"Uncertain")}</p><p><strong>Potentially affected components:</strong></p><div class="tag-list">${tags(d.incident?.components)}</div><p>These are visual inferences only; a single image cannot establish the actual accident history.</p></div>
       <div class="detail-card"><h3>Estimated Repair Range</h3><p style="font-size:26px;font-weight:800;color:#171717">${esc(d.repairRange||"Professional inspection required")}</p><p>This is an approximate educational estimate, not a final quotation.</p></div>
-      <div class="detail-card"><h3>Image & Description Consistency</h3><p><strong>${esc(d.consistency?.level||"Unknown")}</strong></p><p>${esc(d.consistency?.explanation||"No consistency explanation available.")}</p></div>
+      <div class="detail-card"><h3>Visual Evidence & Limitations</h3><p><strong>${esc(d.consistency?.level||"Image-based assessment")}</strong></p><p>${esc(d.consistency?.explanation||"Assessment is based only on visible details in the uploaded photo.")}</p></div>
     </div>
     <div class="detail-card" style="margin-top:14px"><h3>Recommended Next Step</h3><p>${esc(d.nextStep||"Document the damage from multiple angles and contact an authorized repair center or insurer for formal inspection.")}</p></div>
     <div class="report-disclaimer"><strong>Disclaimer:</strong> This is an AI-assisted preliminary assessment for academic/demonstration use. It is not a legally binding insurance decision, professional inspection, or exact repair quotation.</div>`;
@@ -74,4 +73,4 @@ function renderResults(d){
 }
 $("#printBtn").addEventListener("click",()=>window.print());
 $("#generateBtn").addEventListener("click",()=>window.print());
-resetBtn.addEventListener("click",()=>{clearFile();description.value="";$("#charCount").textContent="0 / 3000";results.classList.add("hidden");resetBtn.classList.add("hidden");window.scrollTo({top:document.querySelector("#assessment").offsetTop-80,behavior:"smooth"})});
+resetBtn.addEventListener("click",()=>{clearFile();results.classList.add("hidden");resetBtn.classList.add("hidden");window.scrollTo({top:document.querySelector("#assessment").offsetTop-80,behavior:"smooth"})});
