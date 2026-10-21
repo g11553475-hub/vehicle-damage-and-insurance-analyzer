@@ -20,6 +20,8 @@ jobs:
         run: |
           node --check server.js
           node --check app.js
+      - name: Run backend smoke tests
+        run: npm test
       - name: Verify accident description field is removed
         run: |
           ! grep -q 'id="description"' index.html
