@@ -20,7 +20,10 @@ jobs:
         run: |
           node --check server.js
           node --check app.js
-      - name: Verify description form is removed
+      - name: Verify accident description field is removed
         run: |
           ! grep -q 'id="description"' index.html
           ! grep -q 'Accident Description (Optional)' index.html
+      - name: Verify API key is not in frontend
+        run: |
+          ! grep -Eq 'sk-[A-Za-z0-9]{20,}' app.js index.html
