@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Vehicle Damage & Insurance Analyzer — AI-assisted preliminary vehicle damage assessment.">
+  <title>Vehicle Damage & Insurance Analyzer</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="#home" aria-label="Vehicle Damage Analyzer home">
+      <span class="brand-mark">V</span>
+      <span>Vehicle Damage Analyzer</span>
+    </a>
+    <button class="menu-toggle" id="menuToggle" aria-label="Open navigation" aria-expanded="false">☰</button>
+    <nav id="navLinks">
+      <a href="#home">Home</a>
+      <a href="#how-it-works">How It Works</a>
+      <a href="#assessment">Assessment</a>
+      <a href="#about">About</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero" id="home">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <p class="eyebrow">AI-ASSISTED VEHICLE ASSESSMENT</p>
+        <h1>A clearer first look<br>after an accident.</h1>
+        <p>Upload a vehicle image and describe what happened. The analyzer combines image processing, computer vision and language analysis to provide a preliminary damage assessment.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#assessment">Start Assessment <span>→</span></a>
+          <a class="btn btn-ghost" href="#how-it-works">How It Works</a>
+        </div>
+        <div class="hero-note">Academic prototype · Not a legally binding insurance decision</div>
+      </div>
+    </section>
+
+    <section class="section" id="how-it-works">
+      <div class="section-heading">
+        <p class="eyebrow">THE WORKFLOW</p>
+        <h2>From evidence to an assessment.</h2>
+        <p>A focused three-step workflow designed for a college project demonstration.</p>
+      </div>
+      <div class="steps">
+        <article class="step-card"><span>01</span><h3>Image Review</h3><p>Upload a vehicle image. The system prepares the image and identifies visible damage.</p></article>
+        <article class="step-card"><span>02</span><h3>Accident Analysis</h3><p>Describe what happened. NLP extracts accident, impact, component and severity information.</p></article>
+        <article class="step-card"><span>03</span><h3>Assessment</h3><p>Visual and textual evidence are combined to estimate severity and an educational repair range.</p></article>
+      </div>
+    </section>
+
+    <section class="section assessment-section" id="assessment">
+      <div class="section-heading">
+        <p class="eyebrow">ASSESSMENT</p>
+        <h2>Vehicle Damage Assessment</h2>
+        <p>Upload the vehicle image and provide the accident details to generate a preliminary assessment.</p>
+      </div>
+
+      <div class="assessment-grid">
+        <article class="panel upload-panel">
+          <div class="panel-title"><h3>Vehicle Image</h3><span class="pill">JPG · PNG · WEBP</span></div>
+          <label class="dropzone" id="dropzone" for="imageInput">
+            <input id="imageInput" type="file" accept="image/jpeg,image/png,image/webp" hidden>
+            <div id="uploadEmpty">
+              <div class="upload-icon">↑</div>
+              <strong>Drag & drop your vehicle image here</strong>
+              <span>or <u>Choose Image</u></span>
+              <small>Maximum 8 MB</small>
+            </div>
+            <div id="uploadPreview" class="upload-preview hidden">
+              <img id="previewImage" alt="Uploaded vehicle preview">
+              <div class="file-meta">
+                <strong id="fileName"></strong>
+                <span id="fileSize"></span>
+              </div>
+              <div class="preview-actions">
+                <button type="button" class="btn btn-small" id="replaceBtn">Replace</button>
+                <button type="button" class="btn btn-small danger-outline" id="removeBtn">Remove</button>
+              </div>
+            </div>
+          </label>
+          <p class="field-error" id="imageError" role="alert"></p>
+        </article>
+
+        <article class="panel">
+          <div class="panel-title"><h3>Accident Description</h3><span class="pill">NLP</span></div>
+          <label for="description" class="sr-only">Accident description</label>
+          <textarea id="description" rows="12" maxlength="3000" placeholder="Describe what happened, for example:
+
+The front of the car hit another vehicle at a low speed. The bumper appears damaged and the right headlight is cracked."></textarea>
+          <div class="textarea-footer"><span>Separate what you observed from what you know about the incident.</span><span id="charCount">0 / 3000</span></div>
+          <p class="field-error" id="descriptionError" role="alert"></p>
+        </article>
+      </div>
+
+      <div class="assessment-actions">
+        <button class="btn btn-primary btn-large" id="analyzeBtn">Analyze Vehicle <span>→</span></button>
+        <button class="btn btn-secondary btn-large hidden" id="resetBtn">New Assessment</button>
+      </div>
+
+      <div class="loading panel hidden" id="loadingState" aria-live="polite">
+        <div class="spinner"></div>
+        <div><strong>Analyzing vehicle...</strong><div class="progress-list">
+          <span class="done">✓ Image uploaded</span><span class="done">✓ Image preprocessing</span><span class="active">● Detecting visible damage</span><span>○ Analyzing accident description</span><span>○ Estimating repair cost</span><span>○ Preparing assessment</span>
+        </div></div>
+      </div>
+
+      <section class="results hidden" id="results" aria-live="polite">
+        <div class="results-header"><div><p class="eyebrow">ASSESSMENT COMPLETE</p><h2>Assessment Results</h2></div><div class="result-actions"><button class="btn btn-secondary" id="printBtn">Print / Save PDF</button><button class="btn btn-primary" id="generateBtn">Generate Report</button></div></div>
+        <div id="reportContent"></div>
+      </section>
+    </section>
+
+    <section class="section about" id="about">
+      <div class="about-card">
+        <div><p class="eyebrow">ACADEMIC PROJECT</p><h2>Built to demonstrate applied AI.</h2></div>
+        <p>Vehicle Damage & Insurance Analyzer demonstrates the integration of digital image processing, machine learning, computer vision and natural language processing. It provides a preliminary assessment and should not replace a professional inspection, mechanic's evaluation or an insurer's official assessment.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer><div><strong>Vehicle Damage & Insurance Analyzer</strong><span>AI-assisted vehicle assessment for academic and demonstration use.</span></div><span>© 2026 · Academic Project</span></footer>
+  <script src="./app.js"></script>
+</body>
+</html>

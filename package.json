@@ -1,0 +1,8 @@
+{
+  "name":"vehicle-damage-and-insurance-analyzer",
+  "version":"1.0.0",
+  "private":true,
+  "description":"Academic AI-assisted vehicle damage assessment application",
+  "scripts":{"dev":"npx serve .","start":"npx serve ."},
+  "engines":{"node":">=18"}
+}
