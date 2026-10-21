@@ -43,7 +43,7 @@ analyzeBtn.addEventListener("click",async()=>{
     const response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,fileName:selectedFile.name})});
     const contentType=response.headers.get("content-type")||"";
     const data=contentType.includes("application/json")?await response.json():null;
-    if(!response.ok)throw new Error(data?.error||`AI analysis service failed (HTTP ${response.status}). GitHub Pages cannot run the private AI backend; start the included Node.js server to analyze images.`);
+    if(!response.ok){if(location.hostname.endsWith("github.io"))throw new Error("This GitHub Pages site is static and has no /api/analyze backend. The HTTP "+response.status+" response is not an AI result. To run real AI analysis without Vercel, start this repository locally with Node.js and open http://localhost:3000.");throw new Error(data?.error||`AI analysis service failed (HTTP ${response.status}). Check that the Node.js backend is running at the same origin.`);}
     if(!data||!data.analysisMode)throw new Error("Unexpected backend response. Check that the Node.js analysis server is running.");
     renderResults(data);
   }catch(err){
