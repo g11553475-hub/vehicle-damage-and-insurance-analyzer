@@ -1,69 +1,30 @@
-# Vehicle Damage & Insurance Analyzer
+# Vehicle Damage & Insurance Analyzer — API-free static edition
 
-A student project using an OpenAI vision model to inspect a vehicle photo and prepare a preliminary damage report. No accident-description field is required.
+This project is configured for GitHub Pages. It does not require an OpenAI key, AI subscription, Node.js, Vercel, or an analysis backend.
 
-## Features
-- Responsive red-and-white frontend with drag-and-drop image upload and preview.
-- JPG, PNG and WEBP image validation (maximum 3 MB).
-- OpenAI vision analysis through a private Node.js backend.
-- Visible damage, severity, affected components, uncertainty, illustrative INR repair range and next steps.
-- Print / Save as PDF.
-- Local Node.js server and Vercel serverless API endpoints.
-- Health check and GitHub Actions validation.
+## Current functionality
+- Existing responsive red-and-white interface.
+- JPG/JPEG, PNG and WEBP upload, drag-and-drop, preview, replace/remove and 3 MB limit.
+- Browser-side image decoding and pixel measurements: dimensions, brightness, contrast and edge density.
+- Separate INR repair-cost guide using manually selected component and severity.
+- Print / Save PDF.
 
-## Recommended live deployment: Vercel + GitHub
+## Important limitation: no trained damage detector is integrated
+The current browser processing is conventional image analysis, not machine learning. Pixel brightness, contrast and edge density cannot reliably identify scratches, dents, broken glass, damaged parts, severity, or localized damage. The site does not invent damage labels, confidence scores, bounding boxes, or an AI-generated no-damage result.
 
-GitHub remains the source-code repository. Vercel builds and hosts the frontend and the secure serverless API from the same repository. The API key must be stored only as a Vercel environment variable.
+A real detector requires a verified, openly licensed model checkpoint and browser-compatible runtime/export (such as ONNX). The public vehicle-damage projects reviewed for this change publish application/training code or PyTorch .pt weights, but a verified, directly browser-loadable checkpoint with documented classes was not available to integrate safely here. Integrating and validating a suitable ONNX damage model remains outstanding. Do not describe this fallback as completed ML damage detection.
 
-1. Import `https://github.com/g11553475-hub/vehicle-damage-and-insurance-analyzer` into Vercel and select the `main` branch.
-2. Keep the project root directory as `./`. The repository contains `api/analyze.js` and `api/health.js`, which Vercel deploys as Node.js functions.
-3. In Vercel → Project → Settings → Environment Variables, add:
-   - `OPENAI_API_KEY` = your private OpenAI API key
-   - `OPENAI_MODEL` = `gpt-4.1-mini`
-4. Add the variables to Production (and Preview if needed), save them, and redeploy the latest deployment so the functions receive them.
-5. Open the deployed URL followed by `/api/health`. Confirm the JSON shows `"status":"ok"` and `"apiKeyConfigured":true`.
-6. Upload a clear vehicle photo on the deployed website and select **Analyze Vehicle**. Confirm an assessment is returned.
+## Repair cost guide
+Estimates are illustrative and manually selected, not predictions from the photo, quotations, hidden-damage assessments or insurance approvals. Edit the priceTable object in app.js to configure ranges.
 
-Because the frontend and API are served from the same Vercel project, leave the `backend-api-url` meta tag empty. The browser will call the same-origin `/api/analyze` endpoint. Do not add a trailing URL or API key to that tag.
+## Enable GitHub Pages
+1. Open repository Settings → Pages.
+2. Under Build and deployment, choose Deploy from a branch.
+3. Select main and /(root), then save.
+4. Open https://g11553475-hub.github.io/vehicle-damage-and-insurance-analyzer/ after deployment completes.
+5. Test file selection, drag/drop, remove/replace, Analyze Vehicle, manual cost guide and Print / Save PDF.
 
-## Local development on Windows
+All page assets use relative paths, so they work from the repository subpath. No backend URL or secret is required.
 
-1. Install Node.js 22: https://nodejs.org/
-2. Download and extract this repository.
-3. Open PowerShell in the project folder.
-4. Create a private environment file: `Copy-Item .env.example .env`.
-5. Edit `.env` and add your real key:
-   ```env
-   OPENAI_API_KEY=your_real_private_key
-   OPENAI_MODEL=gpt-4.1-mini
-   PORT=3000
-   FRONTEND_ORIGIN=
-   ```
-6. Run `npm run check`, then `npm test`.
-7. Run `npm start` and open http://localhost:3000.
-8. Check http://localhost:3000/api/health. The `apiKeyConfigured` value should be `true`.
-
-## GitHub Pages limitation
-
-GitHub Pages serves static files only; it cannot run the Node.js API. The GitHub Pages URL will therefore show a backend-configuration message until a separate backend URL is configured. For the simplest online setup, use the Vercel deployment URL for both the website and API. GitHub Actions validates code but is not a persistent API server.
-
-## Security
-- Never commit `.env` or put an API key in `index.html`, `app.js`, or any other browser file.
-- If an API key was exposed publicly, revoke it and create a replacement.
-- Keep API billing and usage limits enabled.
-
-## Endpoints
-- `GET /api/health`: returns backend status, model name and whether a key is configured. It never returns the key.
-- `POST /api/analyze`: accepts JSON with an image data URL and returns the AI assessment.
-
-## Troubleshooting
-- `apiKeyConfigured: false`: add `OPENAI_API_KEY` in Vercel Project Settings → Environment Variables and redeploy.
-- HTTP 401 from OpenAI: the key is invalid or revoked.
-- HTTP 429: check OpenAI billing, quota and rate limits.
-- HTTP 502: check model access and Vercel runtime logs.
-- `The secure AI backend URL has not been configured` on GitHub Pages: use the Vercel-hosted site or configure a separately hosted backend URL.
-- The npm `cache-dir` warning is usually an environment/configuration warning and is not itself an application build failure. Remove an unsupported `cache-dir` setting from the build environment or npm configuration if you control it.
-
-## Limitations
-
-This is an educational prototype, not a certified damage detector, exact quotation, professional inspection or official insurance decision. One photo cannot establish hidden structural damage, actual accident history, liability or insurance coverage. Repair estimates are illustrative only.
+## Privacy and limitations
+Image processing runs in the browser; the photo is not sent to an analysis server by this page. Have a qualified professional inspect the vehicle from multiple angles. This is an academic demonstration, not a certified detector or official insurance assessment.
