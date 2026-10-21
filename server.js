@@ -6,7 +6,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
 const MAX_IMAGE_CHARS = 4_300_000;
-const allowedOrigins = new Set((process.env.FRONTEND_ORIGIN || "").split(",").map(v => v.trim().replace(/\\/$/, "")).filter(Boolean));
+const allowedOrigins = new Set((process.env.FRONTEND_ORIGIN || "").split(",").map(v => v.trim()).filter(Boolean));
 
 function loadLocalEnv() {
   const envPath = path.join(ROOT, ".env");
@@ -111,7 +111,7 @@ const server = http.createServer(async (req, res) => {
   const pathname = new URL(req.url, "http://localhost").pathname;
   if (pathname.startsWith("/api/")) {
     const origin = req.headers.origin;
-    if (origin && !allowedOrigins.has(origin.replace(/\\/$/, ""))) {
+    if (origin && !allowedOrigins.has(origin)) {
       return sendJson(res, 403, { error: "This website origin is not allowed to use the analysis API." });
     }
     if (origin) {
