@@ -2,6 +2,7 @@ const $=s=>document.querySelector(s);
 const imageInput=$("#imageInput"),dropzone=$("#dropzone"),preview=$("#previewImage"),empty=$("#uploadEmpty"),previewWrap=$("#uploadPreview"),fileName=$("#fileName"),fileSize=$("#fileSize"),analyzeBtn=$("#analyzeBtn"),resetBtn=$("#resetBtn"),loading=$("#loadingState"),results=$("#results"),reportContent=$("#reportContent"),imageError=$("#imageError"),analysisError=$("#analysisError");
 
 let selectedFile=null;
+const API_BASE_URL=(document.querySelector('meta[name="backend-api-url"]')?.content||"").trim();
 $("#menuToggle").addEventListener("click",()=>{const nav=$("#navLinks");const open=nav.classList.toggle("open");$("#menuToggle").setAttribute("aria-expanded",open)});
 $("#navLinks").addEventListener("click",e=>{if(e.target.matches("a"))$("#navLinks").classList.remove("open")});
 
@@ -36,12 +37,10 @@ analyzeBtn.addEventListener("click",async()=>{
   if(analysisError){analysisError.textContent="";analysisError.classList.add("hidden");}
   analyzeBtn.disabled=true;loading.classList.remove("hidden");results.classList.add("hidden");
   try{
-    // GitHub Pages cannot execute the private /api/analyze backend. Never expose the API key in browser code.
-    if (location.hostname.endsWith("github.io")) {
-      throw new Error("AI service is not configured for this hosted page. Your image upload works, but this page has no connected analysis server. The project needs a secure backend endpoint before AI results can be generated. GitHub Pages cannot run the backend itself.");
-    }
+    // The backend URL is public configuration. The private API key remains on the server.
+    if(location.hostname.endsWith("github.io")&&!API_BASE_URL){throw new Error("The secure AI backend URL has not been configured. Deploy server.js to a Node.js backend, then set the backend-api-url meta tag in index.html. Never put the API key in this website.");}
     const image=await dataUrl(selectedFile);
-    const response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,fileName:selectedFile.name})});
+    const response=await fetch(`${API_BASE_URL}/api/analyze`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,fileName:selectedFile.name})});
     const contentType=response.headers.get("content-type")||"";
     const data=contentType.includes("application/json")?await response.json():null;
     if(!response.ok){throw new Error(data?.error||`The analysis server returned HTTP ${response.status}. The server must be running and connected to this website before AI analysis can work.`);}
