@@ -1,5 +1,5 @@
 const $=s=>document.querySelector(s);
-const imageInput=$("#imageInput"),dropzone=$("#dropzone"),preview=$("#previewImage"),empty=$("#uploadEmpty"),previewWrap=$("#uploadPreview"),fileName=$("#fileName"),fileSize=$("#fileSize"),analyzeBtn=$("#analyzeBtn"),resetBtn=$("#resetBtn"),loading=$("#loadingState"),results=$("#results"),reportContent=$("#reportContent"),imageError=$("#imageError");
+const imageInput=$("#imageInput"),dropzone=$("#dropzone"),preview=$("#previewImage"),empty=$("#uploadEmpty"),previewWrap=$("#uploadPreview"),fileName=$("#fileName"),fileSize=$("#fileSize"),analyzeBtn=$("#analyzeBtn"),resetBtn=$("#resetBtn"),loading=$("#loadingState"),results=$("#results"),reportContent=$("#reportContent"),imageError=$("#imageError"),analysisError=$("#analysisError");
 
 let selectedFile=null;
 $("#menuToggle").addEventListener("click",()=>{const nav=$("#navLinks");const open=nav.classList.toggle("open");$("#menuToggle").setAttribute("aria-expanded",open)});
@@ -22,7 +22,7 @@ imageInput.addEventListener("change",e=>setFile(e.target.files[0]));
 dropzone.addEventListener("drop",e=>setFile(e.dataTransfer.files[0]));
 $("#replaceBtn").addEventListener("click",e=>{e.preventDefault();imageInput.click()});
 $("#removeBtn").addEventListener("click",e=>{e.preventDefault();clearFile()});
-function clearFile(){selectedFile=null;imageInput.value="";preview.src="";empty.classList.remove("hidden");previewWrap.classList.add("hidden")}
+function clearFile(){selectedFile=null;imageInput.value="";preview.src="";empty.classList.remove("hidden");previewWrap.classList.add("hidden");if(analysisError){analysisError.textContent="";analysisError.classList.add("hidden")}}
 
 function validate(){
   let ok=true;imageError.textContent="";
@@ -33,11 +33,12 @@ function dataUrl(file){return new Promise((resolve,reject)=>{const r=new FileRea
 
 analyzeBtn.addEventListener("click",async()=>{
   if(!validate())return;
+  if(analysisError){analysisError.textContent="";analysisError.classList.add("hidden");}
   analyzeBtn.disabled=true;loading.classList.remove("hidden");results.classList.add("hidden");
   try{
-    // GitHub Pages is static hosting and cannot execute the private /api/analyze function.
+    // GitHub Pages cannot execute the private /api/analyze backend. Never expose the API key in browser code.
     if (location.hostname.endsWith("github.io")) {
-      throw new Error("GitHub Pages can display this website but cannot run the private AI analysis backend, so image analysis cannot run on this URL. To use the analyzer with GitHub only, download or clone this repository, add your OPENAI_API_KEY to a private .env file, run npm start, and open http://localhost:3000. Never place your API key in app.js or any public GitHub file.");
+      throw new Error("AI analysis is not connected on this GitHub Pages URL because Pages only hosts static files. For a secure test using this GitHub repository, run the included Node.js backend locally (npm start) and open http://localhost:3000. A continuously live AI endpoint requires a running backend service; do not put your API key in public files.");
     }
     const image=await dataUrl(selectedFile);
     const response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,fileName:selectedFile.name})});
@@ -47,7 +48,8 @@ analyzeBtn.addEventListener("click",async()=>{
     if(!data||!data.analysisMode)throw new Error("Unexpected backend response. Check that the Node.js analysis server is running.");
     renderResults(data);
   }catch(err){
-    alert(err.message||"The analysis could not be completed. Please try again.");
+    if(analysisError){analysisError.textContent=err.message||"The analysis could not be completed. Please try again.";analysisError.classList.remove("hidden");analysisError.scrollIntoView({behavior:"smooth",block:"center"});}
+    else alert(err.message||"The analysis could not be completed. Please try again.");
   }finally{
     loading.classList.add("hidden");analyzeBtn.disabled=false;
   }
