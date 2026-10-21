@@ -109,6 +109,14 @@ const mime = {
 const server = http.createServer(async (req, res) => {
   const pathname = new URL(req.url, "http://localhost").pathname;
   if (pathname === "/api/analyze") return analyze(req, res);
+  if (pathname === "/api/health" && (req.method === "GET" || req.method === "HEAD")) {
+    return sendJson(res, 200, {
+      status: "ok",
+      backend: "node",
+      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+      apiKeyConfigured: Boolean(process.env.OPENAI_API_KEY)
+    });
+  }
   if (req.method !== "GET" && req.method !== "HEAD") {
     return sendJson(res, 405, { error: "Method not allowed." });
   }
