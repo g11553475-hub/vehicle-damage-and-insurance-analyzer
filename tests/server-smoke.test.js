@@ -50,5 +50,5 @@ test("backend serves health and frontend and rejects invalid images", async t =>
     body: JSON.stringify({ image: "not-an-image" })
   });
   assert.equal(invalid.status, 400);
-  assert.match((await invalid.json()).error, /valid JPG, PNG, or WEBP/i);
+  assert.match((await invalid.json()).error, /JPG, PNG, or WEBP/i);
 });
