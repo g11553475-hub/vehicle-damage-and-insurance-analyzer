@@ -10,7 +10,9 @@ function sendJson(res, status, data) {
 export default async function handler(req, res) {
   const origin = req.headers.origin;
   const allowed = (process.env.FRONTEND_ORIGIN || "").split(",").map(v => v.trim()).filter(Boolean);
-  if (origin && origin !== req.headers.host && !allowed.includes(origin)) {
+  const protocol = req.headers["x-forwarded-proto"] || "https";
+  const sameOrigin = origin && origin === `${protocol}://${req.headers.host}`;
+  if (origin && !sameOrigin && !allowed.includes(origin)) {
     return sendJson(res, 403, { error: "This website origin is not allowed to use the analysis API." });
   }
   if (origin && allowed.includes(origin)) {
