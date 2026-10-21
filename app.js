@@ -37,7 +37,7 @@ analyzeBtn.addEventListener("click",async()=>{
   try{
     // GitHub Pages is static hosting and cannot execute the private /api/analyze function.
     if (location.hostname.endsWith("github.io")) {
-      throw new Error("You are viewing the GitHub Pages copy, which cannot run the AI backend. Open your project's live Vercel deployment URL and upload the image there. If no Vercel deployment URL exists yet, deploy this repository in Vercel and add OPENAI_API_KEY under Project Settings → Environment Variables.");
+      throw new Error("GitHub Pages can display this website but cannot run the private AI analysis backend, so image analysis cannot run on this URL. To use the analyzer with GitHub only, download or clone this repository, add your OPENAI_API_KEY to a private .env file, run npm start, and open http://localhost:3000. Never place your API key in app.js or any public GitHub file.");
     }
     const image=await dataUrl(selectedFile);
     const response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,fileName:selectedFile.name})});
