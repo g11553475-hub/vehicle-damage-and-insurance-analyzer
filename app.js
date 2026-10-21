@@ -7,7 +7,7 @@ const reportContent=$("#reportContent"), imageError=$("#imageError"), analysisEr
 let selectedFile=null, previewUrl=null, currentReport=null, sessionPromise=null;
 const MODEL_URL="https://huggingface.co/tommy33355/damagelens-onnx/resolve/main/car_damage_seg.onnx";
 const LABELS=["crack","dent","glass shatter","lamp broken","scratch","tire flat"];
-const MODEL_INPUT=640, CONF_THRESHOLD=0.28, IOU_THRESHOLD=0.45;
+const MODEL_INPUT=512, CONF_THRESHOLD=0.32, IOU_THRESHOLD=0.45;
 const COSTS={
   "scratch":[2500,12000],"dent":[4000,22000],"crack":[3000,18000],
   "glass shatter":[5000,35000],"lamp broken":[2500,22000],"tire flat":[1500,12000]
@@ -35,7 +35,8 @@ function loadOrt(){
  if(sessionPromise)return sessionPromise;
  sessionPromise=new Promise((resolve,reject)=>{
    if(!window.ort){reject(new Error("The browser AI runtime could not load. Check your internet connection and reload the page."));return}
-   window.ort.env.wasm.numThreads=1;
+   window.ort.env.wasm.numThreads= Math.max(1, Math.min(4, (navigator.hardwareConcurrency || 2) - 1));
+   window.ort.env.wasm.proxy = true;
    window.ort.InferenceSession.create(MODEL_URL,{executionProviders:["wasm"],graphOptimizationLevel:"all"}).then(resolve).catch(err=>{sessionPromise=null;reject(new Error("The damage model could not be downloaded or initialized. Please reload and try again. Details: "+(err.message||"model loading failed")))});
  });
  return sessionPromise;
@@ -114,7 +115,7 @@ analyzeBtn.addEventListener("click",async()=>{
  analysisError.textContent="";analysisError.classList.add("hidden");analyzeBtn.disabled=true;loading.classList.remove("hidden");results.classList.add("hidden");
  try{
   const img=await loadImage(selectedFile);const prep=prepareTensor(img);const session=await loadOrt();
-  const inputName=session.inputNames[0];const output=await session.run({[inputName]:prep.tensor});
+  const inputName=session.inputNames[0];const output=await session.run({[inputName]:prep.tensor},{}, { logSeverityLevel: 3 });
   const out=output[session.outputNames[0]];const dets=decode(out,prep);showResults(dets,img,prep);
  }catch(e){analysisError.textContent=e.message||"AI image analysis failed. No result report was generated.";analysisError.classList.remove("hidden")}
  finally{loading.classList.add("hidden");analyzeBtn.disabled=false}
