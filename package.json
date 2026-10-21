@@ -2,10 +2,11 @@
   "name": "vehicle-damage-and-insurance-analyzer",
   "version": "1.0.0",
   "private": true,
-  "description": "Academic AI-assisted vehicle damage assessment application",
+  "description": "AI-assisted vehicle damage assessment using a local Node.js backend and OpenAI vision",
   "scripts": {
-    "dev": "npx serve .",
-    "start": "npx serve ."
+    "start": "node server.js",
+    "dev": "node server.js",
+    "check": "node --check server.js && node --check app.js"
   },
   "engines": {
     "node": ">=18"
