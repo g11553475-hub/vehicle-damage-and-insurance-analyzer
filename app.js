@@ -28,7 +28,6 @@ function clearFile(){selectedFile=null;imageInput.value="";preview.src="";empty.
 function validate(){
   let ok=true;imageError.textContent="";descriptionError.textContent="";
   if(!selectedFile){imageError.textContent="Please upload a vehicle image before starting the assessment.";ok=false}
-  if(!description.value.trim()){descriptionError.textContent="Please describe what happened in the accident.";ok=false}
   return ok
 }
 function dataUrl(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)})}
@@ -39,8 +38,10 @@ analyzeBtn.addEventListener("click",async()=>{
   try{
     const image=await dataUrl(selectedFile);
     const response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,description:description.value.trim(),fileName:selectedFile.name})});
-    const data=await response.json();
-    if(!response.ok)throw new Error(data.error||"The assessment service is temporarily unavailable.");
+    const contentType=response.headers.get("content-type")||"";
+    const data=contentType.includes("application/json")?await response.json():null;
+    if(!response.ok)throw new Error(data?.error||`Backend request failed (HTTP ${response.status}). Open the Vercel deployment, not GitHub Pages.`);
+    if(!data||!data.analysisMode)throw new Error("Unexpected backend response. Check the Vercel deployment.");
     renderResults(data);
   }catch(err){
     alert(err.message||"The analysis could not be completed. Please try again.");
