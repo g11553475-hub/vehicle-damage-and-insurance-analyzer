@@ -11,7 +11,7 @@ function setFile(file){
   if(!file)return;
   const valid=["image/jpeg","image/png","image/webp"].includes(file.type);
   if(!valid){imageError.textContent="Please upload a JPG, PNG or WEBP image.";return}
-  if(file.size>8*1024*1024){imageError.textContent="The image must be smaller than 8 MB.";return}
+  if(file.size>3*1024*1024){imageError.textContent="The image must be 3 MB or smaller for reliable upload.";return}
   selectedFile=file;
   const url=URL.createObjectURL(file);preview.src=url;preview.alt=`Uploaded vehicle image: ${file.name}`;
   fileName.textContent=file.name;fileSize.textContent=`${(file.size/1024/1024).toFixed(2)} MB`;
