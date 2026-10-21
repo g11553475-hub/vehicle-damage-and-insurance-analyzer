@@ -38,13 +38,13 @@ analyzeBtn.addEventListener("click",async()=>{
   try{
     // GitHub Pages cannot execute the private /api/analyze backend. Never expose the API key in browser code.
     if (location.hostname.endsWith("github.io")) {
-      throw new Error("AI analysis is not connected on this GitHub Pages URL because Pages only hosts static files. For a secure test using this GitHub repository, run the included Node.js backend locally (npm start) and open http://localhost:3000. A continuously live AI endpoint requires a running backend service; do not put your API key in public files.");
+      throw new Error("AI service is not configured for this hosted page. Your image upload works, but this page has no connected analysis server. The project needs a secure backend endpoint before AI results can be generated. GitHub Pages cannot run the backend itself.");
     }
     const image=await dataUrl(selectedFile);
     const response=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({image,fileName:selectedFile.name})});
     const contentType=response.headers.get("content-type")||"";
     const data=contentType.includes("application/json")?await response.json():null;
-    if(!response.ok){if(location.hostname.endsWith("github.io"))throw new Error("This GitHub Pages site is static and has no /api/analyze backend. The HTTP "+response.status+" response is not an AI result. To run real AI analysis without Vercel, start this repository locally with Node.js and open http://localhost:3000.");throw new Error(data?.error||`AI analysis service failed (HTTP ${response.status}). Check that the Node.js backend is running at the same origin.`);}
+    if(!response.ok){throw new Error(data?.error||`The analysis server returned HTTP ${response.status}. The server must be running and connected to this website before AI analysis can work.`);}
     if(!data||!data.analysisMode)throw new Error("Unexpected backend response. Check that the Node.js analysis server is running.");
     renderResults(data);
   }catch(err){
