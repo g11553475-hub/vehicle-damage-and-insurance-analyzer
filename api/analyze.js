@@ -1,3 +1,5 @@
+export const config = { api: { bodyParser: { sizeLimit: "5mb" } } };
+
 const MAX_IMAGE_CHARS = 4_300_000;
 
 function sendJson(res, status, data) {
