@@ -1,8 +1,0 @@
-opencv-python
-numpy
-pillow
-torch
-torchvision
-ultralytics
-scikit-learn
-pandas
