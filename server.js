@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT || 3000);
 const MAX_IMAGE_CHARS = 4_300_000;
+const allowedOrigins = new Set((process.env.FRONTEND_ORIGIN || "").split(",").map(v => v.trim().replace(/\\/$/, "")).filter(Boolean));
 
 function loadLocalEnv() {
   const envPath = path.join(ROOT, ".env");
@@ -108,6 +109,19 @@ const mime = {
 
 const server = http.createServer(async (req, res) => {
   const pathname = new URL(req.url, "http://localhost").pathname;
+  if (pathname.startsWith("/api/")) {
+    const origin = req.headers.origin;
+    if (origin && !allowedOrigins.has(origin.replace(/\\/$/, ""))) {
+      return sendJson(res, 403, { error: "This website origin is not allowed to use the analysis API." });
+    }
+    if (origin) {
+      res.setHeader("Access-Control-Allow-Origin", origin);
+      res.setHeader("Vary", "Origin");
+      res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+      res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+    }
+    if (req.method === "OPTIONS") { res.writeHead(204); return res.end(); }
+  }
   if (pathname === "/api/analyze") return analyze(req, res);
   if (pathname === "/api/health" && (req.method === "GET" || req.method === "HEAD")) {
     return sendJson(res, 200, {
