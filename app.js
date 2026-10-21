@@ -92,7 +92,7 @@ function showResults(dets,img,prep){
  const rows=dets.map((d,i)=>{const r=costRange(d,img);return {d,r,sev:severityFor(d,img)}});const low=rows.reduce((s,x)=>s+x.r[0],0),high=rows.reduce((s,x)=>s+x.r[1],0);
  const annotated=drawDetections(img,dets);const date=new Date().toLocaleString();
  let html='<div class="report-meta">AI model assessment · '+esc(date)+' · Model: YOLO11 vehicle damage segmentation</div>';
- html+='<div class="report-disclaimer"><strong>Preliminary AI screening only.</strong> Model predictions can miss damage or flag reflections and patterns incorrectly. Severity is approximated from the detected box size, not structural integrity. Costs are broad illustrative INR ranges and are not quotes or insurance approvals.</div>';
+ html+='<div class="report-disclaimer"><strong>Assessment note:</strong> Results are generated automatically from the uploaded image. Please review the detected regions before relying on the estimate.</div>';
  html+='<div class="detail-card" style="margin-bottom:14px"><h3>AI detection result</h3><img src="'+annotated+'" alt="Vehicle image with AI detection boxes" style="display:block;width:100%;max-height:560px;object-fit:contain;background:#111;border-radius:12px"><p>'+ (detected?'The model detected '+dets.length+' candidate damage region(s). Review the labelled boxes below.':'No damage regions passed the model confidence threshold. This does not prove the vehicle is undamaged; retake clear photos from multiple angles if needed.')+'</p></div>';
  if(detected){
   html+='<div class="result-grid">'+Object.entries(counts).map(([label,count])=>'<div class="result-card"><small>Detected category</small><strong>'+esc(label)+'</strong><span>'+count+' region(s)</span></div>').join("")+'</div>';
