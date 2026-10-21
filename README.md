@@ -1,72 +1,67 @@
 # Vehicle Damage & Insurance Analyzer
 
-An academic project that uses an OpenAI vision model to inspect a vehicle photo and prepare a preliminary damage assessment. The user uploads an image only; there is no accident-description field.
+A student project using an OpenAI vision model to inspect a vehicle photo and prepare a preliminary damage report. No accident-description field is required.
 
 ## Features
+- Responsive red-and-white frontend with drag-and-drop image upload and preview.
+- JPG, PNG and WEBP image validation (maximum 3 MB).
+- OpenAI vision analysis through a private Node.js backend.
+- Visible damage, severity, affected components, uncertainty, illustrative INR repair range and next steps.
+- Print / Save as PDF.
+- Backend health check, request validation, CORS configuration and GitHub Actions code checks.
 
-- Upload or drag-and-drop a JPG, PNG, or WEBP vehicle photo (up to 3 MB).
-- Analyze visible damage, likely affected components, severity and uncertainty using an OpenAI vision model.
-- Show a broad, illustrative repair-cost range in INR when a reasonable estimate is possible.
-- Print or save the assessment report as PDF.
-- Keep the OpenAI API key on the Node.js backend, never in browser JavaScript.
+## Hosting limitation
+GitHub Pages hosts static files only. It cannot run this Node.js backend or securely store a private OpenAI API key. GitHub Actions validates code; it is not a persistent public API server.
 
-## Important: what GitHub Pages can run
-
-GitHub Pages hosts static files only. It cannot run `server.js` or provide a secure private OpenAI API endpoint. Therefore the public GitHub Pages URL can display the website, but it cannot perform real AI image analysis by itself.
-
-To run the complete analyzer without Vercel, run the Node.js backend locally from this repository. For a permanently online public analyzer, a backend service must be running somewhere; GitHub Pages alone cannot provide that. GitHub Actions can check code but is not a persistent web server.
+A permanently online analyzer needs both the GitHub Pages frontend and a running Node.js backend. This project does not use Vercel. If GitHub Pages is the only runtime allowed, real private-key OpenAI analysis is not possible. Running locally is the GitHub-only development option.
 
 ## Run locally on Windows
-
-1. Install Node.js 18 or newer from https://nodejs.org/.
-2. Download this repository from GitHub and extract it, or clone it with Git.
-3. Open Command Prompt or PowerShell in the project folder.
-4. Copy `.env.example` to a new file named `.env`.
-5. Edit `.env` and replace the placeholder with your real OpenAI API key:
-
+1. Install Node.js 18 or newer: https://nodejs.org/
+2. Download and extract this repository.
+3. Open PowerShell in the project folder.
+4. Create your private environment file: `Copy-Item .env.example .env` (Command Prompt: `copy .env.example .env`).
+5. Edit `.env` and replace the placeholder with your real API key:
    ```env
-   OPENAI_API_KEY=your_real_openai_api_key
+   OPENAI_API_KEY=your_real_private_key
    OPENAI_MODEL=gpt-4.1-mini
    PORT=3000
+   FRONTEND_ORIGIN=
    ```
+   Keep `.env` private. Never commit it or put the key in browser code.
+6. Run syntax checks: `npm run check`
+7. Start the server: `npm start`
+8. Open http://localhost:3000. Check http://localhost:3000/api/health; `apiKeyConfigured` should be `true`.
+9. Upload a clear vehicle photo and select **Analyze Vehicle**.
 
-   Keep `.env` private. Do not commit it to GitHub or share screenshots that show the key.
-6. Start the website and backend:
+## GitHub Pages + backend deployment
+1. Publish the frontend with GitHub Pages.
+2. Deploy `server.js` to a Node.js backend host. Set these private/runtime environment variables in the backend host:
+   - `OPENAI_API_KEY`: private API key
+   - `OPENAI_MODEL`: `gpt-4.1-mini` or another vision-capable model enabled for your account
+   - `FRONTEND_ORIGIN`: exact origin of the Pages site, e.g. `https://g11553475-hub.github.io` (no path)
+   - `PORT`: provided by the host, if required
+3. In `index.html`, set the `backend-api-url` meta tag content to the backend's public HTTPS base URL. This URL is public configuration, not a secret. Never put the API key there.
+4. Commit the frontend URL change and wait for Pages to publish.
+5. Visit the backend's `/api/health`. Confirm `status: "ok"` and `apiKeyConfigured: true`.
+6. Upload a real image to test end-to-end. A valid key, API billing/quota and model access are required.
 
-   ```bash
-   npm start
-   ```
+## Key safety
+- The key is read only by `server.js` from a local `.env` file or backend environment variables.
+- `.env` is ignored by Git.
+- Never put the key in `app.js`, `index.html`, a committed file, or screenshots. If exposed, revoke it and create a replacement.
 
-7. Open http://localhost:3000 in your browser.
-8. Check the backend status at http://localhost:3000/api/health. It should return JSON with `"status":"ok"` and `"apiKeyConfigured":true`.
-9. Upload a clear vehicle photo and press **Analyze Vehicle**. No accident description is required.
-
-## Where the API is configured
-
-- `.env`: private local environment variables; contains `OPENAI_API_KEY`. This file must never be uploaded.
-- `.env.example`: safe template containing only a placeholder.
-- `server.js`: reads the key on the server and sends the image to the OpenAI API. The key is never sent to the browser.
-- `app.js`: handles image selection, calls `POST /api/analyze`, and displays the returned report.
-- `/api/health`: local server status check. It reports whether a key is configured without exposing the key.
-
-## Code checks
-
-Run:
-
-```bash
-npm run check
-```
-
-GitHub Actions also runs the JavaScript syntax check on pushes and pull requests to the main/master branch. A syntax check does not prove that a real OpenAI request will succeed; the API key must be valid, the account must have API access and billing/quota available, and the model must be available to the account.
+## Endpoints
+- `GET /api/health`: backend status and key-configured boolean; never returns the key.
+- `POST /api/analyze`: accepts JSON with an `image` data URL.
+- `OPTIONS /api/*`: CORS preflight for separate frontend hosting.
 
 ## Troubleshooting
+- `apiKeyConfigured: false`: check private environment variables and restart the backend.
+- HTTP 401: invalid/revoked API key.
+- HTTP 429: quota, billing or rate limit.
+- HTTP 502: provider/model issue or invalid response; check backend logs.
+- Browser CORS error: make `FRONTEND_ORIGIN` match the browser origin exactly (scheme + host, no path).
+- GitHub Pages cannot analyze: deploy the backend and configure `backend-api-url`.
 
-- **`apiKeyConfigured: false`**: make sure `.env` is in the same folder as `server.js`, then restart `npm start`.
-- **HTTP 401**: the OpenAI API key is invalid or inactive.
-- **HTTP 429**: check API billing, quota and rate limits.
-- **Model error**: set `OPENAI_MODEL` to a vision-capable model available to your API account.
-- **GitHub Pages cannot analyze**: expected until a secure backend is deployed and connected. Do not paste the API key into `app.js`.
-
-## Responsible use
-
-This is an educational prototype, not a certified damage detector, exact repair quotation, professional inspection or official insurance decision. A single photo cannot reliably reveal hidden structural damage, establish liability, prove accident history or determine insurance coverage. A qualified repair professional and insurer should assess real claims.
+## Limitations
+This is an educational prototype, not a certified damage detector, exact quotation, professional inspection or official insurance decision. One photo cannot establish hidden structural damage, actual accident history, liability or insurance coverage. Repair estimates are illustrative only.
